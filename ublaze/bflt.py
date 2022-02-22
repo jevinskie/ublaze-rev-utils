@@ -1,11 +1,8 @@
-#!/usr/bin/env python3
-
 import datetime
 import enum
-import sys
+import math
 
 from construct import *
-from rich import print as rprint
 
 u8 = Int8ub
 u16 = Int16ub
@@ -35,8 +32,7 @@ class BFLTBuildDateAdapter(Adapter):
 
 BFLTBuildDate = BFLTBuildDateAdapter(u32)
 
-
-bflt_header = Struct(
+BFLTHeader = Struct(
     'magic' / Const(b"bFLT"),
     'rev' / u32,
     'entry' / Hex(u32),
@@ -51,5 +47,11 @@ bflt_header = Struct(
     'filler' / Padding(4 * 5),
 )
 
-hdr = bflt_header.parse_stream(open(sys.argv[1], "rb"))
-print(hdr)
+BFLT = Struct(
+    'header' / BFLTHeader,
+    'code' / Bytes(lambda this: this.header.data_start - this._subcons.header.sizeof()),
+    'data' / Bytes(this.header.data_end - this.header.data_start),
+    'relocs' / u32[this.header.reloc_count],
+)
+
+__all__ = ('BFLTFlagsEnum', 'BFLTFlags', 'BFLTBuildDate', 'BFLTHeader', 'BFLT')
