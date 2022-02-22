@@ -1,0 +1,23 @@
+#include "stdint.bt"
+
+struct bflt_header_t {
+    char magic[4];
+    u32 rev;
+    u32 entry;
+    u32 data_start;
+    u32 data_end;
+    u32 bss_end;
+    u32 stack_start;
+    u32 reloc_start;
+    u32 reloc_count;
+    u32 flags;
+    u32 build_date;
+    u32 filler[5];
+};
+
+
+struct bflt_t {
+	bflt_header_t header;
+};
+
+bflt_t bflt;
