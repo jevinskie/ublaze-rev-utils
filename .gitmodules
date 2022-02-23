@@ -1,0 +1,6 @@
+[submodule "3rdparty/elfio"]
+	path = 3rdparty/elfio
+	url = https://github.com/serge1/ELFIO
+[submodule "3rdparty/byteswap"]
+	path = 3rdparty/byteswap
+	url = https://github.com/bruxisma/byteswap
