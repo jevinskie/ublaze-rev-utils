@@ -14,6 +14,9 @@ using namespace ELFIO;
 
 #include "bflt.h"
 
+#define R_MICROBLAZE_32 1
+#define R_MICROBLAZE_64 5
+
 template <typename T> T bswap(T v) {
     if constexpr (std::endian::native == std::endian::little)
         return ixm::byteswap(v);
@@ -86,16 +89,6 @@ int main(int argc, const char **argv) {
     auto bss_sz = bflt_hdr->bss_end - bflt_hdr->data_end;
 
     auto reloc_buf = (uint32_t *)(in_buf + bflt_hdr->reloc_start);
-    for (uint32_t i = 0; i < bflt_hdr->reloc_count; ++i) {
-        bswap(&reloc_buf[i]);
-        uint32_t addr = reloc_buf[i];
-        bool is64 = false;
-        if (addr & 0x8000'0000) {
-            addr &= ~0x8000'0000;
-            is64 = true;
-        }
-        printf("reloc[%04u]: 0x%08x%s\n", i, addr, is64 ? " *" : "");
-    }
 
     elfio writer;
     writer.create(ELFCLASS32, ELFDATA2MSB);
@@ -129,12 +122,25 @@ int main(int argc, const char **argv) {
     bss_sec->set_size(bss_sz);
     load_seg->add_section_index(bss_sec->get_index(), bss_sec->get_addr_align());
 
-    auto rel_sec = writer.sections.add(".rel.dyn");
-    rel_sec->set_type(SHT_RELA);
-    rel_sec->set_info(text_sec->get_index());
-    // rel_sec->set_link( sym_sec->get_index() );
-    rel_sec->set_addr_align(4);
-    rel_sec->set_entry_size(writer.get_default_entry_size(SHT_RELA));
+    auto text_rel = writer.sections.add(".rel.text");
+    text_rel->set_type(SHT_RELA);
+    text_rel->set_info(text_sec->get_index());
+    // text_rel->set_link( sym_sec->get_index() );
+    text_rel->set_addr_align(4);
+    text_rel->set_entry_size(writer.get_default_entry_size(SHT_REL));
+
+    relocation_section_accessor rel_writer(writer, text_rel);
+    for (uint32_t i = 0; i < bflt_hdr->reloc_count; ++i) {
+        bswap(&reloc_buf[i]);
+        uint32_t addr = reloc_buf[i];
+        bool is64     = false;
+        if (addr & 0x8000'0000) {
+            addr &= ~0x8000'0000;
+            is64 = true;
+        }
+        rel_writer.add_entry(addr, !is64 ? R_MICROBLAZE_32 : R_MICROBLAZE_64);
+        printf("reloc[%04u]: 0x%08x%s\n", i, addr, is64 ? " *" : "");
+    }
 
     writer.save(argv[2]);
 
