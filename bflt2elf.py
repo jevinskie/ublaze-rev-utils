@@ -7,6 +7,7 @@ from ublaze.bflt import *
 
 
 bflt = BFLT.parse_stream(open(sys.argv[1], "rb"))
+print(bflt.header)
 
 elf = ELF.Binary("bflt2elf", ELF.ELF_CLASS.CLASS32)
 elf.header.file_type = ELF.E_TYPE.EXECUTABLE

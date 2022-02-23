@@ -114,7 +114,7 @@ int main(int argc, const char **argv) {
     auto bss_sec = writer.sections.add(".bss");
     bss_sec->set_type(SHT_NOBITS);
     bss_sec->set_flags(SHF_ALLOC | SHF_WRITE);
-    data_sec->set_size(bss_sz);
+    bss_sec->set_size(bss_sz);
     load_seg->add_section_index(bss_sec->get_index(), bss_sec->get_addr_align());
 
     writer.save(argv[2]);
