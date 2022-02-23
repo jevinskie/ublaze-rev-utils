@@ -85,6 +85,13 @@ int main(int argc, const char **argv) {
 
     auto bss_sz = bflt_hdr->bss_end - bflt_hdr->data_end;
 
+    auto reloc_buf = (uint32_t *)(in_buf + bflt_hdr->reloc_start);
+    for (uint32_t i = 0; i < bflt_hdr->reloc_count; ++i) {
+        bswap(&reloc_buf[i]);
+        uint32_t addr = reloc_buf[i];
+        printf("reloc[%04u]: 0x%08x\n", i, addr);
+    }
+
     elfio writer;
     writer.create(ELFCLASS32, ELFDATA2MSB);
 
@@ -116,6 +123,13 @@ int main(int argc, const char **argv) {
     bss_sec->set_flags(SHF_ALLOC | SHF_WRITE);
     bss_sec->set_size(bss_sz);
     load_seg->add_section_index(bss_sec->get_index(), bss_sec->get_addr_align());
+
+    auto rel_sec = writer.sections.add(".rel.dyn");
+    rel_sec->set_type(SHT_RELA);
+    rel_sec->set_info(text_sec->get_index());
+    // rel_sec->set_link( sym_sec->get_index() );
+    rel_sec->set_addr_align(4);
+    rel_sec->set_entry_size(writer.get_default_entry_size(SHT_RELA));
 
     writer.save(argv[2]);
 
