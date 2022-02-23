@@ -89,7 +89,12 @@ int main(int argc, const char **argv) {
     for (uint32_t i = 0; i < bflt_hdr->reloc_count; ++i) {
         bswap(&reloc_buf[i]);
         uint32_t addr = reloc_buf[i];
-        printf("reloc[%04u]: 0x%08x\n", i, addr);
+        bool is64 = false;
+        if (addr & 0x8000'0000) {
+            addr &= ~0x8000'0000;
+            is64 = true;
+        }
+        printf("reloc[%04u]: 0x%08x%s\n", i, addr, is64 ? " *" : "");
     }
 
     elfio writer;
