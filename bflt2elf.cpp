@@ -98,10 +98,12 @@ int main(int argc, const char **argv) {
     writer.set_machine(EM_MICROBLAZE);
     writer.set_entry(bflt_hdr->entry);
 
+    uint32_t load_addr = 0x1000'0000;
+    writer.set_entry(load_addr);
     auto load_seg = writer.segments.add();
     load_seg->set_type(PT_LOAD);
-    load_seg->set_virtual_address(0);
-    load_seg->set_physical_address(0);
+    load_seg->set_virtual_address(load_addr);
+    load_seg->set_physical_address(load_addr);
     load_seg->set_flags(PF_X | PF_R | PF_W);
 
     auto text_sec = writer.sections.add(".text");
@@ -123,7 +125,7 @@ int main(int argc, const char **argv) {
     load_seg->add_section_index(bss_sec->get_index(), bss_sec->get_addr_align());
 
     auto text_rel = writer.sections.add(".rel.text");
-    text_rel->set_type(SHT_RELA);
+    text_rel->set_type(SHT_REL);
     text_rel->set_info(text_sec->get_index());
     // text_rel->set_link( sym_sec->get_index() );
     text_rel->set_addr_align(4);
@@ -138,8 +140,8 @@ int main(int argc, const char **argv) {
             addr &= ~0x8000'0000;
             is64 = true;
         }
-        rel_writer.add_entry(addr, !is64 ? R_MICROBLAZE_32 : R_MICROBLAZE_64);
-        printf("reloc[%04u]: 0x%08x%s\n", i, addr, is64 ? " *" : "");
+        // rel_writer.add_entry(addr, !is64 ? R_MICROBLAZE_32 : R_MICROBLAZE_64);
+        // printf("reloc[%04u]: 0x%08x%s\n", i, addr, is64 ? " *" : "");
     }
 
     writer.save(argv[2]);
