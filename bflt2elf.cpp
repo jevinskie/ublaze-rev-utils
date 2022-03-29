@@ -124,7 +124,13 @@ int main(int argc, const char **argv) {
             addr_val = ((inst_hi & 0xFFFF) << 16) | (inst_lo & 0xFFFF);
             printf("inst_hi: 0x%08x inst_lo: 0x%08x\n", inst_hi, inst_lo);
         }
-        uint32_t new_addr_val = addr_val + load_addr;
+        uint32_t new_addr_val;
+        if (addr_val) {
+            new_addr_val = addr_val + load_addr + sizeof(bflt_hdr);
+        } else {
+            printf("not relocating zero\n");
+            new_addr_val = addr_val;
+        } 
         printf("addr_p: %p addr_val: 0x%08x new_addr_val: 0x%08x\n", addr_p, addr_val,
                new_addr_val);
         // printf("new_addr_val: %p\n", new_addr_val);
@@ -159,21 +165,21 @@ int main(int argc, const char **argv) {
     text_sec->set_type(SHT_PROGBITS);
     text_sec->set_flags(SHF_ALLOC | SHF_EXECINSTR);
     text_sec->set_data(code_buf, code_sz);
-    text_sec->set_addr_align(0x4);
+    text_sec->set_addr_align(1);
     load_seg->add_section_index(text_sec->get_index(), text_sec->get_addr_align());
 
     auto data_sec = writer.sections.add(".data");
     data_sec->set_type(SHT_PROGBITS);
     data_sec->set_flags(SHF_ALLOC | SHF_WRITE);
     data_sec->set_data(data_buf, data_sz);
-    data_sec->set_addr_align(0x4);
+    data_sec->set_addr_align(1);
     load_seg->add_section_index(data_sec->get_index(), data_sec->get_addr_align());
 
     auto bss_sec = writer.sections.add(".bss");
     bss_sec->set_type(SHT_NOBITS);
     bss_sec->set_flags(SHF_ALLOC | SHF_WRITE);
     bss_sec->set_size(bss_sz);
-    bss_sec->set_addr_align(0x4);
+    bss_sec->set_addr_align(1);
     load_seg->add_section_index(bss_sec->get_index(), bss_sec->get_addr_align());
 
     // auto text_rel = writer.sections.add(".rel.text");
