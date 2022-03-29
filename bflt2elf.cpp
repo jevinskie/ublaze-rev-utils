@@ -122,6 +122,7 @@ int main(int argc, const char **argv) {
             inst_lo = addr_p[1];
             bswap(&inst_lo);
             addr_val = ((inst_hi & 0xFFFF) << 16) | (inst_lo & 0xFFFF);
+            printf("inst_hi: 0x%08x inst_lo: 0x%08x\n", inst_hi, inst_lo);
         }
         uint32_t new_addr_val = addr_val + load_addr;
         printf("addr_p: %p addr_val: 0x%08x new_addr_val: 0x%08x\n", addr_p, addr_val,
@@ -132,8 +133,9 @@ int main(int argc, const char **argv) {
         } else {
             new_inst_hi = (inst_hi & 0xFFFF0000) | (new_addr_val >> 16);
             new_inst_lo = (inst_lo & 0xFFFF0000) | (new_addr_val & 0xFFFF);
-            addr_p[0]   = new_inst_hi;
-            addr_p[1]   = new_inst_lo;
+            printf("new_inst_hi: 0x%08x new_inst_lo: 0x%08x\n", new_inst_hi, new_inst_lo);
+            addr_p[0]   = bswap(new_inst_hi);
+            addr_p[1]   = bswap(new_inst_lo);
         }
     }
 
