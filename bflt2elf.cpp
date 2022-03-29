@@ -98,40 +98,45 @@ int main(int argc, const char **argv) {
     writer.set_machine(EM_MICROBLAZE);
     writer.set_entry(bflt_hdr->entry);
 
-    uint32_t load_addr = 0x1000'0000;
+    // uint32_t load_addr = 0x1000'0000;
+    uint32_t load_addr = 0x0;
     writer.set_entry(load_addr);
     auto load_seg = writer.segments.add();
     load_seg->set_type(PT_LOAD);
     load_seg->set_virtual_address(load_addr);
     load_seg->set_physical_address(load_addr);
     load_seg->set_flags(PF_X | PF_R | PF_W);
+    load_seg->set_align(0x1000);
 
     auto text_sec = writer.sections.add(".text");
     text_sec->set_type(SHT_PROGBITS);
     text_sec->set_flags(SHF_ALLOC | SHF_EXECINSTR);
     text_sec->set_data(code_buf, code_sz);
+    text_sec->set_addr_align(0x4);
     load_seg->add_section_index(text_sec->get_index(), text_sec->get_addr_align());
 
     auto data_sec = writer.sections.add(".data");
     data_sec->set_type(SHT_PROGBITS);
     data_sec->set_flags(SHF_ALLOC | SHF_WRITE);
     data_sec->set_data(data_buf, data_sz);
+    data_sec->set_addr_align(0x4);
     load_seg->add_section_index(data_sec->get_index(), data_sec->get_addr_align());
 
     auto bss_sec = writer.sections.add(".bss");
     bss_sec->set_type(SHT_NOBITS);
     bss_sec->set_flags(SHF_ALLOC | SHF_WRITE);
     bss_sec->set_size(bss_sz);
+    bss_sec->set_addr_align(0x4);
     load_seg->add_section_index(bss_sec->get_index(), bss_sec->get_addr_align());
 
-    auto text_rel = writer.sections.add(".rel.text");
-    text_rel->set_type(SHT_REL);
-    text_rel->set_info(text_sec->get_index());
-    // text_rel->set_link( sym_sec->get_index() );
-    text_rel->set_addr_align(4);
-    text_rel->set_entry_size(writer.get_default_entry_size(SHT_REL));
+    // auto text_rel = writer.sections.add(".rel.text");
+    // text_rel->set_type(SHT_REL);
+    // text_rel->set_info(text_sec->get_index());
+    // // text_rel->set_link( sym_sec->get_index() );
+    // text_rel->set_addr_align(4);
+    // text_rel->set_entry_size(writer.get_default_entry_size(SHT_REL));
 
-    relocation_section_accessor rel_writer(writer, text_rel);
+    // relocation_section_accessor rel_writer(writer, text_rel);
     for (uint32_t i = 0; i < bflt_hdr->reloc_count; ++i) {
         bswap(&reloc_buf[i]);
         uint32_t addr = reloc_buf[i];
@@ -145,6 +150,7 @@ int main(int argc, const char **argv) {
     }
 
     writer.save(argv[2]);
+    assert(!chmod(argv[2], 0755));
 
     return 0;
 }
