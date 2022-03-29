@@ -1,3 +1,5 @@
+#undef NDEBUG
+
 #include <cassert>
 #include <cstdio>
 #include <sys/fcntl.h>
@@ -97,7 +99,7 @@ int main(int argc, const char **argv) {
     for (uint32_t i = 0; i < bflt_hdr.reloc_count; ++i) {
         uint32_t addr = reloc_buf[i];
         bswap(&addr);
-        uint32_t addr_val, inst_hi, inst_lo;
+        uint32_t addr_val, inst_hi, inst_lo, new_inst_hi, new_inst_lo;
         uint32_t *addr_p;
         bool is64 = false;
         if (addr & 0x8000'0000) {
@@ -125,7 +127,14 @@ int main(int argc, const char **argv) {
         printf("addr_p: %p addr_val: 0x%08x new_addr_val: 0x%08x\n", addr_p, addr_val,
                new_addr_val);
         // printf("new_addr_val: %p\n", new_addr_val);
-        // *addr_p = bswap(new_addr_val);
+        if (!is64) {
+            addr_p[0] = bswap(new_addr_val);
+        } else {
+            new_inst_hi = (inst_hi & 0xFFFF0000) | (new_addr_val >> 16);
+            new_inst_lo = (inst_lo & 0xFFFF0000) | (new_addr_val & 0xFFFF);
+            addr_p[0]   = new_inst_hi;
+            addr_p[1]   = new_inst_lo;
+        }
     }
 
     elfio writer;
