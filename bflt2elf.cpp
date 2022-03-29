@@ -99,7 +99,7 @@ int main(int argc, const char **argv) {
         bswap(&addr);
         uint32_t addr_val, inst_hi, inst_lo;
         uint32_t *addr_p;
-        bool is64     = false;
+        bool is64 = false;
         if (addr & 0x8000'0000) {
             addr &= ~0x8000'0000;
             is64 = true;
@@ -122,7 +122,8 @@ int main(int argc, const char **argv) {
             addr_val = ((inst_hi & 0xFFFF) << 16) | (inst_lo & 0xFFFF);
         }
         uint32_t new_addr_val = addr_val + load_addr;
-        printf("addr_p: %p addr_val: 0x%08x new_addr_val: 0x%08x\n", addr_p, addr_val, new_addr_val);
+        printf("addr_p: %p addr_val: 0x%08x new_addr_val: 0x%08x\n", addr_p, addr_val,
+               new_addr_val);
         // printf("new_addr_val: %p\n", new_addr_val);
         // *addr_p = bswap(new_addr_val);
     }
